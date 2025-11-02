@@ -1,0 +1,14 @@
+# Poetry
+.venv
+/dist
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE/Editor
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
