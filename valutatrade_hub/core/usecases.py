@@ -1,19 +1,23 @@
 """
-Основная бизнес-логика приложения.
+Основная бизнес-логика приложения с логированием операций.
 Содержит сервисы для управления пользователями, портфелями и курсами.
 """
 
+
 # Импортируем кастомные исключения
+# Импортируем валидацию валют
+from ..core.currencies import get_currency
 from ..core.exceptions import CurrencyNotFoundError, InsufficientFundsError
+
+# Импортируем наши модели данных
+from ..core.models import Portfolio, User
+
+# Импортируем декоратор для логирования (из корня valutatrade_hub/)
+from ..decorators import log_action
 
 # Импортируем синглтоны из инфраструктурного слоя
 from ..infra.database import DatabaseManager
 from ..infra.settings import SettingsLoader
-
-# Импортируем наши модели данных
-from .models import Portfolio, User
-
-# Класс DataManager больше не нужен, его роль выполняет DatabaseManager
 
 
 class AuthService:
@@ -22,6 +26,7 @@ class AuthService:
         # Получаем единственный экземпляр DatabaseManager
         self.db = DatabaseManager()
 
+    @log_action(action_type="REGISTER", verbose=True)
     def register(self, username: str, password: str) -> User:
         """Регистрирует нового пользователя."""
         users = self.db.get_users()
@@ -47,6 +52,7 @@ class AuthService:
         
         return new_user
 
+    @log_action(action_type="LOGIN", verbose=True)
     def login(self, username: str, password: str) -> User:
         """Аутентифицирует пользователя."""
         users = self.db.get_users()
@@ -77,15 +83,32 @@ class RateService:
         self.settings = SettingsLoader()
 
     def get_rate(self, from_currency: str, to_currency: str, depth: int = 0) -> float:
-        """Получает курс обмена между двумя валютами с защитой от рекурсии."""
-        # print(f"[DEBUG] get_rate: {from_currency} -> {to_currency}, depth={depth}")
+        """
+        Получает курс обмена между двумя валютами с защитой от рекурсии.
         
+        Args:
+            from_currency: Код валюты источника (например, 'BTC')
+            to_currency: Код валюты назначения (например, 'USD')
+            depth: Глубина рекурсии (для защиты от циклов)
+            
+        Returns:
+            float: Курс обмена
+            
+        Raises:
+            CurrencyNotFoundError: Если валюта не найдена
+            ValueError: Если курс недоступен или превышена глубина рекурсии
+        """
         if depth > 2:
             raise ValueError(
                 f"Превышена глубина рекурсии для {from_currency}→{to_currency}"
             )
         
         from_currency, to_currency = from_currency.upper(), to_currency.upper()
+        
+        # Валидация валют через currencies.py
+        get_currency(from_currency)
+        get_currency(to_currency)
+        
         if from_currency == to_currency:
             return 1.0
         
@@ -101,24 +124,22 @@ class RateService:
         if reverse_pair in rates_data and "rate" in rates_data[reverse_pair]:
             return 1 / rates_data[reverse_pair]["rate"]
         
-        # 3. Кросс-курс через USD (только если это не базовый случай)
+        # 3. Кросс-курс через USD
         if from_currency != "USD" and to_currency != "USD":
             try:
                 from_usd_rate = self.get_rate(from_currency, "USD", depth + 1)
                 to_usd_rate = self.get_rate("USD", to_currency, depth + 1)
                 return from_usd_rate * to_usd_rate
             except ValueError:
-                # Если кросс-курс не удался, просто продолжаем
                 pass
         
-        # 4. Если ничего не найдено, выбрасываем ошибку
+        # 4. Если ничего не найдено
         raise ValueError(f"Курс {from_currency}→{to_currency} недоступен")
 
 
 class PortfolioService:
     """Сервис для управления портфелями и кошельками."""
     def __init__(self, rate_service: RateService):
-        # Получаем единственный экземпляр DatabaseManager
         self.db = DatabaseManager()
         self.rate_service = rate_service
 
@@ -130,12 +151,14 @@ class PortfolioService:
             raise ValueError("Портфель для пользователя не найден")
         return portfolio
 
+    @log_action(action_type="BUY", verbose=True)
     def buy_currency(self, user_id: int, currency: str, amount: float) -> dict:
-        """Покупает валюту для пользователя, используя кастомные исключения.
+        """
+        Покупает валюту для пользователя с логированием операции.
         
         Args:
             user_id: ID пользователя
-            currency: Код валюты для покупки (например, 'BTC', 'EUR')
+            currency: Код валюты для покупки
             amount: Количество валюты для покупки
             
         Returns:
@@ -143,17 +166,20 @@ class PortfolioService:
             
         Raises:
             ValueError: Если amount <= 0
-            InsufficientFundsError: Если недостаточно USD для покупки
-            ApiRequestError: Если сервис курсов недоступен
+            CurrencyNotFoundError: Если валюта не найдена
+            InsufficientFundsError: Если недостаточно USD
         """
         if amount <= 0:
             raise ValueError("'amount' должен быть положительным числом")
+
+        # Валидация валюты
+        get_currency(currency)
 
         portfolio = self.get_portfolio(user_id)
         rate = self.rate_service.get_rate(currency, "USD")
         cost_in_usd = amount * rate
         
-        # Проверяем наличие USD кошелька и достаточности средств
+        # Проверка средств
         usd_wallet = portfolio.get_wallet("USD")
         if not usd_wallet:
             raise InsufficientFundsError(
@@ -180,7 +206,7 @@ class PortfolioService:
         old_balance = target_wallet.balance
         target_wallet.deposit(amount)
         
-        # Сохраняем изменения в базу данных
+        # Сохранение
         portfolios = self.db.get_portfolios()
         for i, p in enumerate(portfolios):
             if p.user_id == user_id:
@@ -188,7 +214,6 @@ class PortfolioService:
                 break
         self.db.save_portfolios(portfolios)
         
-        # Возвращаем детальную информацию об операции
         return {
             "currency": currency,
             "amount": amount,
@@ -198,8 +223,10 @@ class PortfolioService:
             "new_balance": target_wallet.balance
         }
 
+    @log_action(action_type="SELL", verbose=True)
     def sell_currency(self, user_id: int, currency: str, amount: float) -> dict:
-        """Продает валюту пользователя, используя кастомные исключения.
+        """
+        Продает валюту пользователя с логированием операции.
         
         Args:
             user_id: ID пользователя
@@ -211,21 +238,21 @@ class PortfolioService:
             
         Raises:
             ValueError: Если amount <= 0
-            CurrencyNotFoundError: Если кошелька валюты нет
+            CurrencyNotFoundError: Если валюта не найдена
             InsufficientFundsError: Если недостаточно средств
-            ApiRequestError: Если сервис курсов недоступен
         """
         if amount <= 0:
             raise ValueError("'amount' должен быть положительным числом")
 
+        # Валидация валюты
+        get_currency(currency)
+
         portfolio = self.get_portfolio(user_id)
         target_wallet = portfolio.get_wallet(currency)
         
-        # Используем CurrencyNotFoundError вместо обычного ValueError
         if not target_wallet:
             raise CurrencyNotFoundError(currency)
 
-        # Используем InsufficientFundsError вместо обычного ValueError
         if target_wallet.balance < amount:
             raise InsufficientFundsError(
                 available=target_wallet.balance,
@@ -233,23 +260,19 @@ class PortfolioService:
                 code=currency
             )
         
-        # Сохраняем старый баланс для отчета
         old_balance = target_wallet.balance
-        
-        # Списываем валюту с кошелька
         target_wallet.withdraw(amount)
         
-        # Получаем курс и рассчитываем выручку в USD
+        # Получаем курс и начисляем USD
         rate = self.rate_service.get_rate(currency, "USD")
         proceeds_in_usd = amount * rate
         
-        # Начисляем USD
         usd_wallet = portfolio.get_wallet("USD")
         if not usd_wallet:
             usd_wallet = portfolio.add_currency("USD")
         usd_wallet.deposit(proceeds_in_usd)
 
-        # Сохраняем изменения в базу данных
+        # Сохранение
         portfolios = self.db.get_portfolios()
         for i, p in enumerate(portfolios):
             if p.user_id == user_id:
@@ -257,7 +280,6 @@ class PortfolioService:
                 break
         self.db.save_portfolios(portfolios)
 
-        # Возвращаем детальную информацию об операции
         return {
             "currency": currency,
             "amount": amount,

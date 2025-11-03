@@ -1,12 +1,13 @@
 """
 Модели данных для приложения Currency Wallet.
-Содержит классы User, Wallet и Portfolio.
+Содержит классы User, Wallet и Portfolio с методами сериализации.
 """
+
 
 import hashlib
 import secrets
 from datetime import datetime
-from typing import Optional
+from typing import Dict, List, Optional
 
 
 class User:
@@ -38,9 +39,9 @@ class User:
             username: Имя пользователя (не менее 1 символа)
             password: Пароль в открытом виде (не менее 4 символов),
                       не используется при загрузке из БД.
-            salt: Соль для хеширования (генерируется автоматически, если не указана)
+            salt: Соль для хеширования (генерируется автоматически)
             hashed_password: Готовый хеш (для загрузки из БД)
-            registration_date: Дата регистрации (текущая дата, если не указана)
+            registration_date: Дата регистрации (текущая дата по умолчанию)
 
         Raises:
             ValueError: Если имя пустое или пароль короче 4 символов
@@ -48,7 +49,7 @@ class User:
         # Валидация
         if not username or len(username.strip()) == 0:
             raise ValueError("Имя пользователя не может быть пустым")
-        # Пароль проверяется только при создании нового пользователя, а не при загрузке
+        # Проверка пароля только при создании нового пользователя
         if not hashed_password and len(password) < 4:
             raise ValueError("Пароль должен быть не короче 4 символов")
 
@@ -108,6 +109,7 @@ class User:
         }
 
     def change_password(self, new_password: str) -> None:
+        """Изменяет пароль пользователя."""
         if len(new_password) < 4:
             raise ValueError("Новый пароль должен быть не короче 4 символов")
         self._salt = secrets.token_hex(8)
@@ -117,11 +119,60 @@ class User:
         """Проверяет введённый пароль на совпадение."""
         return self._hash_password(password, self._salt) == self._hashed_password
 
+    # --- Методы сериализации для JSON ---
+    def to_dict(self) -> dict:
+        """
+        Сериализует объект User в словарь для сохранения в JSON.
+
+        Returns:
+            dict: Словарь с данными пользователя
+        """
+        return {
+            "user_id": self._user_id,
+            "username": self._username,
+            "salt": self._salt,
+            "hashed_password": self._hashed_password,
+            "registration_date": self._registration_date.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'User':
+        """
+        Создает объект User из словаря (десериализация из JSON).
+
+        Args:
+            data: Словарь с данными пользователя
+
+        Returns:
+            User: Восстановленный объект пользователя
+        """
+        return cls(
+            user_id=data["user_id"],
+            username=data["username"],
+            password="",  # Не используется при загрузке
+            salt=data["salt"],
+            hashed_password=data["hashed_password"],
+            registration_date=datetime.fromisoformat(data["registration_date"]),
+        )
+
+    def __repr__(self):
+        return f"User(id={self._user_id}, username='{self._username}')"
+
 
 class Wallet:
     """Представляет кошелёк для одной валюты."""
 
     def __init__(self, currency_code: str, balance: float = 0.0):
+        """
+        Инициализирует кошелек с указанной валютой.
+
+        Args:
+            currency_code: Код валюты (например, 'USD', 'EUR', 'BTC')
+            balance: Начальный баланс (по умолчанию 0.0)
+
+        Raises:
+            ValueError: Если баланс отрицательный
+        """
         if balance < 0:
             raise ValueError("Баланс не может быть отрицательным")
         self.currency_code = currency_code.upper()
@@ -129,10 +180,12 @@ class Wallet:
 
     @property
     def balance(self) -> float:
+        """Возвращает текущий баланс кошелька."""
         return self._balance
 
     @balance.setter
     def balance(self, value: float) -> None:
+        """Устанавливает баланс кошелька с валидацией."""
         if not isinstance(value, (int, float)):
             raise TypeError("Значение баланса должно быть числом")
         if value < 0:
@@ -140,19 +193,74 @@ class Wallet:
         self._balance = float(value)
 
     def deposit(self, amount: float) -> None:
+        """
+        Пополняет кошелек на указанную сумму.
+
+        Args:
+            amount: Сумма пополнения
+
+        Raises:
+            ValueError: Если сумма не положительная
+        """
         if not isinstance(amount, (int, float)) or amount <= 0:
-            raise ValueError("Сумма пополнения должна быть положительным числом")
+            raise ValueError(
+                "Сумма пополнения должна быть положительным числом"
+            )
         self._balance += amount
 
     def withdraw(self, amount: float) -> None:
+        """
+        Списывает указанную сумму с кошелька.
+
+        Args:
+            amount: Сумма для списания
+
+        Raises:
+            ValueError: Если сумма не положительная или превышает баланс
+        """
         if not isinstance(amount, (int, float)) or amount <= 0:
             raise ValueError("Сумма снятия должна быть положительным числом")
         if amount > self._balance:
-            raise ValueError(f"Недостаточно средств. Доступно: {self._balance}")
+            raise ValueError(
+                f"Недостаточно средств. Доступно: {self._balance}"
+            )
         self._balance -= amount
 
     def get_balance_info(self) -> str:
+        """Возвращает строковое представление баланса."""
         return f"Баланс {self.currency_code}: {self._balance}"
+
+    # --- Методы сериализации для JSON ---
+    def to_dict(self) -> dict:
+        """
+        Сериализует объект Wallet в словарь для сохранения в JSON.
+
+        Returns:
+            dict: Словарь с данными кошелька
+        """
+        return {
+            "currency_code": self.currency_code,
+            "balance": self._balance
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Wallet':
+        """
+        Создает объект Wallet из словаря (десериализация из JSON).
+
+        Args:
+            data: Словарь с данными кошелька
+
+        Returns:
+            Wallet: Восстановленный объект кошелька
+        """
+        return cls(
+            currency_code=data["currency_code"],
+            balance=data["balance"]
+        )
+
+    def __repr__(self):
+        return f"Wallet({self.currency_code}, balance={self._balance:.2f})"
 
 
 class Portfolio:
@@ -167,19 +275,35 @@ class Portfolio:
         "RUB": 0.011,
     }
 
-    def __init__(self, user_id: int, wallets: Optional[dict[str, Wallet]] = None):
+    def __init__(
+        self,
+        user_id: int,
+        wallets: Optional[Dict[str, Wallet]] = None
+    ):
+        """
+        Инициализирует портфель для указанного пользователя.
+
+        Args:
+            user_id: ID пользователя, которому принадлежит портфель
+            wallets: Словарь существующих кошельков (для загрузки из БД)
+        """
         self._user_id = user_id
-        self._wallets = wallets if wallets is not None else {}
+        self._wallets: Dict[str, Wallet] = wallets if wallets else {}
 
     @property
     def user_id(self) -> int:
+        """Возвращает ID пользователя."""
         return self._user_id
 
     @property
-    def wallets(self) -> dict[str, Wallet]:
+    def wallets(self) -> Dict[str, Wallet]:
+        """Возвращает копию словаря кошельков."""
         return self._wallets.copy()
 
     def add_currency(self, currency_code: str) -> Wallet:
+        """
+        Добавляет новый кошелек для указанной валюты.
+        """
         code = currency_code.upper()
         if code in self._wallets:
             raise ValueError(f"Кошелёк для валюты {code} уже существует")
@@ -188,9 +312,21 @@ class Portfolio:
         return wallet
 
     def get_wallet(self, currency_code: str) -> Optional[Wallet]:
+        """
+        Возвращает кошелек для указанной валюты.
+        """
         return self._wallets.get(currency_code.upper())
 
+    def get_all_wallets(self) -> List[Wallet]:
+        """
+        Возвращает список всех кошельков в портфеле.
+        """
+        return list(self._wallets.values())
+
     def get_total_value(self, base_currency: str = "USD") -> float:
+        """
+        Вычисляет общую стоимость портфеля в указанной валюте.
+        """
         base_code = base_currency.upper()
         if base_code not in self.EXCHANGE_RATES:
             raise ValueError(f"Неизвестная базовая валюта: {base_code}")
@@ -200,7 +336,38 @@ class Portfolio:
 
         for wallet in self._wallets.values():
             if wallet.currency_code in self.EXCHANGE_RATES:
-                # Конвертируем баланс кошелька в USD, а затем в базовую валюту
-                usd_value = wallet.balance * self.EXCHANGE_RATES[wallet.currency_code]
+                # Конвертируем баланс в USD, затем в базовую валюту
+                usd_value = (
+                    wallet.balance * self.EXCHANGE_RATES[wallet.currency_code]
+                )
                 total_value += usd_value / base_rate
         return round(total_value, 2)
+
+    # --- Методы сериализации для JSON ---
+    def to_dict(self) -> dict:
+        """
+        Сериализует объект Portfolio в словарь для сохранения в JSON.
+        """
+        return {
+            "user_id": self._user_id,
+            "wallets": [
+                wallet.to_dict() for wallet in self._wallets.values()
+            ]
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Portfolio':
+        """
+        Создает объект Portfolio из словаря (десериализация из JSON).
+        """
+        wallets_dict = {}
+        for wallet_data in data.get("wallets", []):
+            wallet = Wallet.from_dict(wallet_data)
+            wallets_dict[wallet.currency_code] = wallet
+
+        return cls(user_id=data["user_id"], wallets=wallets_dict)
+
+    def __repr__(self):
+        wallet_count = len(self._wallets)
+        return f"Portfolio(user_id={self._user_id}, wallets={wallet_count})"
+

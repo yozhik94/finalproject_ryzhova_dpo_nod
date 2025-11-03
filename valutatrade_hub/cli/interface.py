@@ -17,6 +17,7 @@ from ..core.usecases import AuthService, PortfolioService, RateService
 # Глобальная переменная для хранения сессии
 current_user = None
 
+
 def handle_register(username, password):
     """Обработчик команды register."""
     try:
@@ -34,6 +35,7 @@ def handle_register(username, password):
         print(f"❌ Ошибка регистрации: {e}")
     except Exception as e:
         print(f"❌ Непредвиденная ошибка: {e}")
+
 
 def handle_sell(currency_code, amount_str):
     """Обработчик команды sell."""
@@ -77,6 +79,16 @@ def handle_sell(currency_code, amount_str):
 
 def main():
     """Парсер команд и точка входа в CLI."""
+    # Инициализация логирования при старте приложения
+    from ..infra.settings import SettingsLoader
+    from ..logging_config import setup_logging
+    
+    settings = SettingsLoader()
+    setup_logging(
+        log_file=settings.get("LOG_FILE", "logs/actions.log"),
+        log_level=settings.get("LOG_LEVEL", "INFO")
+    )
+    
     args = sys.argv[1:]
     if not args:
         print("Добро пожаловать в Currency Wallet!")
@@ -107,3 +119,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
