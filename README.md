@@ -129,5 +129,5 @@ poetry run python -m valutatrade_hub.cli.interface register --username alice --p
     ```
 ## Демонстрация работы
 
-[![asciicast](https://asciinema.org/a/https://asciinema.org/a/xw5zOzY2HJ3yUb5aBSFeTvOKQ.svg)](https://asciinema.org/a/xw5zOzY2HJ3yUb5aBSFeTvOKQ)
+[![Демонстрация работы "ValutaTrade Hub"](https://asciinema.org/a/xw5zOzY2HJ3yUb5aBSFeTvOKQ.svg)](https://asciinema.org/a/xw5zOzY2HJ3yUb5aBSFeTvOKQ)
 
