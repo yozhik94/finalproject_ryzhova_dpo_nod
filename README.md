@@ -45,7 +45,7 @@
 make install
 ```
 
-Эта команда создаст виртуальное окружение и установит все необходимые пакеты из `pyproject.toml`.
+Эта команда создаст виртуальное окружение и установит все необходимые пакеты.
 
 ### 2. Настройка Parser Service
 
@@ -66,49 +66,48 @@ make install
 
 ### Запуск приложения
 
-Для выполнения команд можно использовать `make` или `poetry run`.
-
-**С помощью `make`:**
+Приложение запускается в интерактивном режиме. Внутри него можно вводить команды с их аргументами.
 ```bash
-make project ARGS="register --username alice --password qwerty123"
+poetry run project
 ```
-**С помощью `poetry` (рекомендуемый способ):**
+После запуска вы увидите приглашение >.
+Парсинг команд с помощью shlex
+Для надежного разбора команд, введенных пользователем, используется стандартная библиотека shlex. Функция shlex.split() корректно разделяет строку на команду и ее аргументы, правильно обрабатывая пробелы и кавычки, что похоже на поведение настоящей командной строки Unix. Это позволяет избежать ошибок при парсинге сложных аргументов, например, паролей со спецсимволами.
 
-```bash
-poetry run python -m valutatrade_hub.cli.interface register --username alice --password qwerty123
-```
-### Основные команды CLI
+---
+
+### Основные команды
 
 *   **Регистрация нового пользователя:**
     ```
-    poetry run python -m valutatrade_hub.cli.interface register --username <имя> --password <пароль>
+    register --username <имя> --password <пароль>
     ```
 
 *   **Обновление курсов валют:**
     ```
-    poetry run python -m valutatrade_hub.cli.interface update-rates
+    update-rates
     ```
 
 *   **Просмотр доступных курсов:**
     ```
-    poetry run python -m valutatrade_hub.cli.interface show-rates
+    show-rates
     ```
     *Дополнительные флаги:* `--currency <КОД>`, `--top <N>`
 
 *   **Просмотр портфеля:**
     ```
-    poetry run python -m valutatrade_hub.cli.interface show-portfolio
+    show-portfolio
     ```
     *Дополнительные флаги:* `--base <ВАЛЮТА>` (например, `--base EUR`)
 
 *   **Покупка валюты:**
     ```
-    poetry run python -m valutatrade_hub.cli.interface buy --currency <КОД> --amount <сумма>
+    buy --currency <КОД> --amount <сумма>
     ```
 
 *   **Продажа валюты:**
     ```
-    poetry run python -m valutatrade_hub.cli.interface sell --currency <КОД> --amount <сумма>
+    sell --currency <КОД> --amount <сумма>
     ```
 ---
 ## Кэширование и TTL (Time-To-Live)
