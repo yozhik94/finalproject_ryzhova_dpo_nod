@@ -10,75 +10,66 @@ from pathlib import Path
 
 def setup_logging(log_file: str = "logs/actions.log", log_level: str = "INFO"):
     """
-    Настраивает систему логирования для приложения.
-    
-    Args:
-        log_file: Путь к файлу логов (относительно корня проекта)
-        log_level: Уровень логирования (DEBUG, INFO, WARNING, ERROR)
-    
-    Конфигурация:
-        - Человекочитаемый формат (не JSON)
-        - Ротация файлов: размер 10 MB, хранить 5 файлов
-        - Вывод в консоль + файл
-        - Отдельный логгер для actions (valutatrade.actions)
-    
-    Формат записи:
-        2025-11-03 21:50:00 INFO valutatrade.actions: BUY user_id=1 ...
+    Настраивает единую систему логирования для всего приложения.
     """
-    # Создаем директорию для логов, если её нет
     log_path = Path(log_file)
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Преобразуем строковый уровень в константу logging
+
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)
-    
-    # Формат логов (человекочитаемый)
-    log_format = (
-        "%(asctime)s %(levelname)s %(name)s: %(message)s"
+
+    # === 1. Настройка корневого логгера (root) ===
+    root_logger = logging.getLogger()
+    root_logger.setLevel(numeric_level)
+
+    # Очищаем все существующие обработчики, чтобы избежать дублирования
+    if root_logger.hasHandlers():
+        root_logger.handlers.clear()
+
+    # === 2. Форматтеры ===
+    # Подробный формат для файла
+    file_formatter = logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
-    date_format = "%Y-%m-%d %H:%M:%S"
-    
-    # Создаем форматтер
-    formatter = logging.Formatter(log_format, datefmt=date_format)
-    
-    # === Обработчик для файла с ротацией ===
-    # maxBytes: 10 MB = 10 * 1024 * 1024
-    # backupCount: хранить 5 архивных файлов (actions.log.1, .2, .3, .4, .5)
+    # Простой формат для консоли (только само сообщение)
+    console_formatter = logging.Formatter("%(message)s")
+
+    # === 3. Обработчик для файла ===
     file_handler = logging.handlers.RotatingFileHandler(
         filename=log_file,
         maxBytes=10 * 1024 * 1024,  # 10 MB
         backupCount=5,
-        encoding='utf-8'
+        encoding="utf-8",
     )
-    file_handler.setLevel(numeric_level)
-    file_handler.setFormatter(formatter)
-    
-    # === Обработчик для консоли (опционально) ===
+    file_handler.setLevel(numeric_level)  # Пишем в файл все, начиная с INFO
+    file_handler.setFormatter(file_formatter)
+    root_logger.addHandler(file_handler)
+
+    # === 4. Обработчик для консоли ===
+    # Выводит только сообщения с уровнем WARNING и выше
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.WARNING)  # В консоль только WARNING и ERROR
-    console_handler.setFormatter(formatter)
-    
-    # === Настройка логгера для actions ===
+    console_handler.setLevel(logging.WARNING)
+    console_handler.setFormatter(console_formatter) # Используем простой формат
+    root_logger.addHandler(console_handler)
+
+    # === 5. Отдельная настройка для логгера декоратора ===
+    # Чтобы его сообщения ERROR не попадали в консоль
     actions_logger = logging.getLogger("valutatrade.actions")
+    actions_logger.propagate = False  # Отключаем проброс наверх
     actions_logger.setLevel(numeric_level)
-    actions_logger.addHandler(file_handler)
-    actions_logger.addHandler(console_handler)
-    
-    # Предотвращаем дублирование логов в root logger
-    actions_logger.propagate = False
-    
-    # === Настройка root logger (для остального приложения) ===
-    root_logger = logging.getLogger()
-    root_logger.setLevel(numeric_level)
-    
-    # Если у root logger ещё нет обработчиков, добавляем
-    if not root_logger.handlers:
-        root_logger.addHandler(file_handler)
-        root_logger.addHandler(console_handler)
-    
-    # Логируем успешную инициализацию
-    actions_logger.info("=" * 60)
-    actions_logger.info("Logging system initialized")
-    actions_logger.info(f"Log file: {log_file}")
-    actions_logger.info(f"Log level: {log_level}")
-    actions_logger.info("=" * 60)
+    # Добавляем ТОЛЬКО файловый обработчик
+    action_file_handler = logging.handlers.RotatingFileHandler(
+        filename=log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+    )
+    action_file_handler.setFormatter(file_formatter)
+    actions_logger.addHandler(action_file_handler)
+
+
+    # Логируем успешную инициализацию (используем actions_logger)
+    logging.getLogger("valutatrade.actions").info("=" * 60)
+    logging.getLogger("valutatrade.actions").info("Logging system initialized")
+    logging.getLogger("valutatrade.actions").info(f"Log file: {log_file}")
+    logging.getLogger("valutatrade.actions").info(f"Log level: {log_level}")
+    logging.getLogger("valutatrade.actions").info("=" * 60)
+
+

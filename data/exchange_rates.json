@@ -1,0 +1,254 @@
+[
+  {
+    "id": "BTC_USD_2025-11-09T11:00:26Z",
+    "from_currency": "BTC",
+    "to_currency": "USD",
+    "rate": 101819.0,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "coingecko",
+    "meta": {
+      "request_ms": 309,
+      "status_code": 200,
+      "etag": "W/\"ada55d9c385239d846eea08a9c256449\"",
+      "raw_id": "bitcoin"
+    }
+  },
+  {
+    "id": "ETH_USD_2025-11-09T11:00:26Z",
+    "from_currency": "ETH",
+    "to_currency": "USD",
+    "rate": 3398.43,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "coingecko",
+    "meta": {
+      "request_ms": 309,
+      "status_code": 200,
+      "etag": "W/\"ada55d9c385239d846eea08a9c256449\"",
+      "raw_id": "ethereum"
+    }
+  },
+  {
+    "id": "USDT_USD_2025-11-09T11:00:26Z",
+    "from_currency": "USDT",
+    "to_currency": "USD",
+    "rate": 0.999911,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "coingecko",
+    "meta": {
+      "request_ms": 309,
+      "status_code": 200,
+      "etag": "W/\"ada55d9c385239d846eea08a9c256449\"",
+      "raw_id": "tether"
+    }
+  },
+  {
+    "id": "EUR_USD_2025-11-09T11:00:26Z",
+    "from_currency": "EUR",
+    "to_currency": "USD",
+    "rate": 0.8649,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 229,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "EUR"
+    }
+  },
+  {
+    "id": "GBP_USD_2025-11-09T11:00:26Z",
+    "from_currency": "GBP",
+    "to_currency": "USD",
+    "rate": 0.7609,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 229,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "GBP"
+    }
+  },
+  {
+    "id": "RUB_USD_2025-11-09T11:00:26Z",
+    "from_currency": "RUB",
+    "to_currency": "USD",
+    "rate": 80.9663,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 229,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "RUB"
+    }
+  },
+  {
+    "id": "CNY_USD_2025-11-09T11:00:26Z",
+    "from_currency": "CNY",
+    "to_currency": "USD",
+    "rate": 7.1251,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 229,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "CNY"
+    }
+  },
+  {
+    "id": "JPY_USD_2025-11-09T11:00:26Z",
+    "from_currency": "JPY",
+    "to_currency": "USD",
+    "rate": 153.3078,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 229,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "JPY"
+    }
+  },
+  {
+    "id": "AUD_USD_2025-11-09T11:00:26Z",
+    "from_currency": "AUD",
+    "to_currency": "USD",
+    "rate": 1.5414,
+    "timestamp": "2025-11-09T11:00:26.504862+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 229,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "AUD"
+    }
+  },
+  {
+    "id": "BTC_USD_2025-11-09T11:08:49Z",
+    "from_currency": "BTC",
+    "to_currency": "USD",
+    "rate": 102020.0,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "coingecko",
+    "meta": {
+      "request_ms": 381,
+      "status_code": 200,
+      "etag": "W/\"aa6e3317f723543c2b22a504929d22ef\"",
+      "raw_id": "bitcoin"
+    }
+  },
+  {
+    "id": "ETH_USD_2025-11-09T11:08:49Z",
+    "from_currency": "ETH",
+    "to_currency": "USD",
+    "rate": 3416.68,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "coingecko",
+    "meta": {
+      "request_ms": 381,
+      "status_code": 200,
+      "etag": "W/\"aa6e3317f723543c2b22a504929d22ef\"",
+      "raw_id": "ethereum"
+    }
+  },
+  {
+    "id": "USDT_USD_2025-11-09T11:08:49Z",
+    "from_currency": "USDT",
+    "to_currency": "USD",
+    "rate": 0.999954,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "coingecko",
+    "meta": {
+      "request_ms": 381,
+      "status_code": 200,
+      "etag": "W/\"aa6e3317f723543c2b22a504929d22ef\"",
+      "raw_id": "tether"
+    }
+  },
+  {
+    "id": "EUR_USD_2025-11-09T11:08:49Z",
+    "from_currency": "EUR",
+    "to_currency": "USD",
+    "rate": 0.8649,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 237,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "EUR"
+    }
+  },
+  {
+    "id": "GBP_USD_2025-11-09T11:08:49Z",
+    "from_currency": "GBP",
+    "to_currency": "USD",
+    "rate": 0.7609,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 237,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "GBP"
+    }
+  },
+  {
+    "id": "RUB_USD_2025-11-09T11:08:49Z",
+    "from_currency": "RUB",
+    "to_currency": "USD",
+    "rate": 80.9663,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 237,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "RUB"
+    }
+  },
+  {
+    "id": "CNY_USD_2025-11-09T11:08:49Z",
+    "from_currency": "CNY",
+    "to_currency": "USD",
+    "rate": 7.1251,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 237,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "CNY"
+    }
+  },
+  {
+    "id": "JPY_USD_2025-11-09T11:08:49Z",
+    "from_currency": "JPY",
+    "to_currency": "USD",
+    "rate": 153.3078,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 237,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "JPY"
+    }
+  },
+  {
+    "id": "AUD_USD_2025-11-09T11:08:49Z",
+    "from_currency": "AUD",
+    "to_currency": "USD",
+    "rate": 1.5414,
+    "timestamp": "2025-11-09T11:08:49.333797+00:00Z",
+    "source": "exchangerate",
+    "meta": {
+      "request_ms": 237,
+      "status_code": 200,
+      "etag": null,
+      "raw_id": "AUD"
+    }
+  }
+]

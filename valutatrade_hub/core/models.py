@@ -46,10 +46,8 @@ class User:
         Raises:
             ValueError: Если имя пустое или пароль короче 4 символов
         """
-        # Валидация
         if not username or len(username.strip()) == 0:
             raise ValueError("Имя пользователя не может быть пустым")
-        # Проверка пароля только при создании нового пользователя
         if not hashed_password and len(password) < 4:
             raise ValueError("Пароль должен быть не короче 4 символов")
 
@@ -57,12 +55,10 @@ class User:
         self._username = username.strip()
         self._registration_date = registration_date or datetime.now()
 
-        # Если передан готовый хеш (загрузка из БД), используем его
         if hashed_password and salt:
             self._salt = salt
             self._hashed_password = hashed_password
         else:
-            # Иначе генерируем соль и хешируем пароль
             self._salt = salt or secrets.token_hex(8)
             self._hashed_password = self._hash_password(password, self._salt)
 
@@ -71,7 +67,6 @@ class User:
         """Хеширует пароль с использованием соли."""
         return hashlib.sha256((password + salt).encode()).hexdigest()
 
-    # --- Геттеры ---
     @property
     def user_id(self) -> int:
         return self._user_id
@@ -79,6 +74,13 @@ class User:
     @property
     def username(self) -> str:
         return self._username
+        
+    @property
+    def password(self) -> str:
+        # Это свойство нужно для обратной совместимости с usecases.py
+        # В идеале, его нужно будет удалить и везде использовать verify_password
+        # Но для быстрого исправления - это лучший вариант.
+        return self._hashed_password
 
     @property
     def registration_date(self) -> datetime:
@@ -92,14 +94,12 @@ class User:
     def hashed_password(self) -> str:
         return self._hashed_password
 
-    # --- Сеттеры ---
     @username.setter
     def username(self, value: str) -> None:
         if not value or len(value.strip()) == 0:
             raise ValueError("Имя пользователя не может быть пустым")
         self._username = value.strip()
 
-    # --- Методы ---
     def get_user_info(self) -> dict:
         """Возвращает информацию о пользователе (без пароля)."""
         return {
@@ -119,14 +119,8 @@ class User:
         """Проверяет введённый пароль на совпадение."""
         return self._hash_password(password, self._salt) == self._hashed_password
 
-    # --- Методы сериализации для JSON ---
     def to_dict(self) -> dict:
-        """
-        Сериализует объект User в словарь для сохранения в JSON.
-
-        Returns:
-            dict: Словарь с данными пользователя
-        """
+        """Сериализует объект User в словарь для сохранения в JSON."""
         return {
             "user_id": self._user_id,
             "username": self._username,
@@ -137,19 +131,11 @@ class User:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'User':
-        """
-        Создает объект User из словаря (десериализация из JSON).
-
-        Args:
-            data: Словарь с данными пользователя
-
-        Returns:
-            User: Восстановленный объект пользователя
-        """
+        """Создает объект User из словаря (десериализация из JSON)."""
         return cls(
             user_id=data["user_id"],
             username=data["username"],
-            password="",  # Не используется при загрузке
+            password="",
             salt=data["salt"],
             hashed_password=data["hashed_password"],
             registration_date=datetime.fromisoformat(data["registration_date"]),
